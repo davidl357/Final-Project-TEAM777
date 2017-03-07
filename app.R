@@ -29,9 +29,10 @@ my.data <- arrange(my.data, -response.games.playtime_forever)
 
 # Converts the total play time from minutes to hours
 my.data <- mutate(my.data, "Total Time Played(in hours)" = round(response.games.playtime_forever / 60, digits = 1))
+my.data <- mutate(my.data, "Total Time Played Last 2 Weeks (in hours)" = round(response.games.playtime_2weeks / 60, digits = 1))
 
 # Only gets the relevant data
-table.data <- select(my.data, 3, 8, 9)
+table.data <- select(my.data, 3, 9, 10)
 colnames(table.data) <- c("Name of Games", "Game Time in the Last 2 Week", "Total Game Time (in hours)")
 
 my.ui <- fluidPage(
@@ -67,7 +68,6 @@ my.server <- function(input, output) {
   
   output$top.table <- renderTable({
     
-    # Top 5 games played
     top.table.games <- head(table.data, input$num.games)
     
   })
@@ -75,7 +75,7 @@ my.server <- function(input, output) {
   output$games.graph <- renderPlot({
     top.games <- head(table.data, input$num.games)
     ggplot(data = top.games) +
-      geom_bar(mapping = aes(x = top.games$`Name of Games`, y = top.games$`Total Game Time (in hours)`, 
+      geom_bar(mapping = aes(x = top.games$`Name of Games`, y = top.games$`Game Time in the Last 2 Week`, 
           fill = top.games$`Name of Games`), stat = "identity") +
       ylab("Total Game Time (in hours)") +
       xlab("Game") +
