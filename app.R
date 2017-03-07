@@ -6,6 +6,7 @@ library("httr")
 library("jsonlite")
 library("knitr")
 
+source("steam api key.R")
 base.url <- "http://api.steampowered.com/"
 key <- paste0("?key=", api.key)
 
