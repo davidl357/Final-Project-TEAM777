@@ -33,7 +33,7 @@ my.data <- mutate(my.data, "Total Time Played Last 2 Weeks (in hours)" = round(r
 
 # Only gets the relevant data
 table.data <- select(my.data, 3, 9, 10)
-colnames(table.data) <- c("Name of Games", "Game Time in the Last 2 Week", "Total Game Time (in hours)")
+colnames(table.data) <- c("Name of Games", "Total Game Time (in hours)", "Game Time in the Last 2 Week")
 
 my.ui <- fluidPage(
   
@@ -45,7 +45,7 @@ my.ui <- fluidPage(
     sidebarPanel(
       
       sliderInput("num.games", "Number of Games to include: ",
-                  min = 2, max = 20, value = 20)
+                  min = 1, max = 20, value = 20)
   
     ),
   
@@ -60,7 +60,9 @@ my.ui <- fluidPage(
       
     )
   
-  )
+  ),
+  
+  textOutput("games.summary")
   
 )
 
@@ -73,9 +75,10 @@ my.server <- function(input, output) {
   })
   
   output$games.graph <- renderPlot({
+    
     top.games <- head(table.data, input$num.games)
     ggplot(data = top.games) +
-      geom_bar(mapping = aes(x = top.games$`Name of Games`, y = top.games$`Game Time in the Last 2 Week`, 
+      geom_bar(mapping = aes(x = top.games$`Name of Games`, y = top.games$`Total Game Time (in hours)`, 
           fill = top.games$`Name of Games`), stat = "identity") +
       ylab("Total Game Time (in hours)") +
       xlab("Game") +
@@ -87,6 +90,19 @@ my.server <- function(input, output) {
             plot.title = element_text(size=20)) +
       guides(fill=FALSE) +
       coord_flip()
+    
+  })
+  
+  output$games.summary <- renderPrint({
+    
+    cat("This table shows the top ")
+    str(input$num.games)
+    cat(" played. The graph shows the top ")
+    str(input$num.games)
+    cat(" played for your library in lifetime hours. The table, shows the top ")
+    str(input$num.games)
+    cat(" games played with the name of the game, lifetime hours played, and amount of hours played in the last 2 weeks.")
+    
   })
   
 }
