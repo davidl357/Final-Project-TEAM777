@@ -83,7 +83,7 @@ my.server <- function(input, output) {
       ylab("Total Game Time (in hours)") +
       xlab("Game") +
       ggtitle("Top Games Played") +
-      theme(axis.title.x=element_text(size=17),
+      theme(axis.title.x=element_text(size=17), # Makes text on graph bigger
             axis.text.x=element_text(size=17),
             axis.title.y=element_text(size=17),
             axis.text.y=element_text(size=17),
@@ -93,15 +93,16 @@ my.server <- function(input, output) {
     
   })
   
-  output$games.summary <- renderPrint({
+  output$games.summary <- renderText({
     
-    cat("This table shows the top ")
-    str(input$num.games)
-    cat(" played. The graph shows the top ")
-    str(input$num.games)
-    cat(" played for your library in lifetime hours. The table, shows the top ")
-    str(input$num.games)
-    cat(" games played with the name of the game, lifetime hours played, and amount of hours played in the last 2 weeks.")
+    # Sets input from slider into a var
+    num <- input$num.games
+    
+    message <- paste0("This table shows the top ", num, " played. The graph shows the top ", num, " played for your library 
+                      in lifetime hours. The table, shows the top ", num, " games played with the name of the game, lifetime 
+                      hours played, and amount of hours played in the last 2 weeks.")
+    
+    return(message)
     
   })
   
