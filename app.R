@@ -7,6 +7,7 @@ library("jsonlite")
 library("knitr")
 
 source("steam api key.R")
+
 base.url <- "http://api.steampowered.com/"
 key <- paste0("?key=", api.key)
 
@@ -43,6 +44,9 @@ my.ui <- fluidPage(
   sidebarLayout(
     
     sidebarPanel(
+      
+      textInput("id", "Input 64 Digit Steam ID", placeholder = "User ID here..."),
+      textOutput("steamid"),
       
       sliderInput("num.games", "Number of Games to include: ",
                   min = 1, max = 20, value = 20)
@@ -104,6 +108,18 @@ my.server <- function(input, output) {
     
     return(message)
     
+  })
+  
+  # stores user input steam id 
+  output$steamid <- renderText({
+    
+    message <- " "
+    
+    if (!is.null(input$id)) {
+      message <- paste0("Your id is: ", input$id)
+    }
+    
+    return(message)
   })
   
 }
