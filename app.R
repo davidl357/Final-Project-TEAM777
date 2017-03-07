@@ -5,14 +5,15 @@ library("ggplot2")
 library("httr")
 library("jsonlite")
 library("knitr")
-library(RColorBrewer)
 
 base.url <- "http://api.steampowered.com/"
 key <- paste0("?key=", api.key)
 
 # Get List of Games and arrange in order
 get.owned.games <- "IPlayerService/GetOwnedGames/v0001/"
-steam.id <- "76561198064703938"
+# steam.id <- "76561198064703938" # James
+steam.id <- "76561198043898894" # David
+# steam.id <- "76561198042574722" # Jesse
 paste0
 
 results <- GET(paste0(base.url,get.owned.games,key,"&steamid=",steam.id,"&format=json&include_appinfo=1&include_played_free_games=1"))
@@ -42,7 +43,7 @@ my.ui <- fluidPage(
     sidebarPanel(
       
       sliderInput("num.games", "Number of Games to include: ",
-                  min = 0, max = 20, value = 5)
+                  min = 2, max = 20, value = 20)
   
     ),
   
@@ -50,9 +51,8 @@ my.ui <- fluidPage(
     mainPanel(
       
       tabsetPanel(type = "tabs",
-                  
-        tabPanel("Table", tableOutput("top.table")),
-        tabPanel("Graph", plotOutput("games.graph"))
+        tabPanel("Graph", plotOutput("games.graph")),     
+        tabPanel("Table", tableOutput("top.table"))
         
       )
       
@@ -75,12 +75,17 @@ my.server <- function(input, output) {
     top.games <- head(table.data, input$num.games)
     ggplot(data = top.games) +
       geom_bar(mapping = aes(x = top.games$`Name of Games`, y = top.games$`Total Game Time (in hours)`, 
-          fill = top.games$`Total Game Time (in hours)`), stat = "identity") +
+          fill = top.games$`Name of Games`), stat = "identity") +
       ylab("Total Game Time (in hours)") +
       xlab("Game") +
       ggtitle("Top Games Played") +
-      theme(axis.text.x = element_text(angle = 70, vjust = .5)) +
-      scale_fill_continuous(name="Total Hours\n Played")
+      theme(axis.title.x=element_text(size=17),
+            axis.text.x=element_text(size=17),
+            axis.title.y=element_text(size=17),
+            axis.text.y=element_text(size=17),
+            plot.title = element_text(size=20)) +
+      guides(fill=FALSE) +
+      coord_flip()
   })
   
 }
