@@ -32,14 +32,30 @@ my.data <- arrange(my.data, -response.games.playtime_forever)
 my.data <- mutate(my.data, "Total Time Played(in hours)" = round(response.games.playtime_forever / 60, digits = 1))
 my.data <- mutate(my.data, "Total Time Played Last 2 Weeks (in hours)" = round(response.games.playtime_2weeks / 60, digits = 1))
 
+# Games with no playtime
+no.time <- filter(my.data, response.games.playtime_forever == 0)
+no.time <- select(no.time, 3)
+colnames(no.time) <- c("Name of Game")
+no.time.list <- as.list(no.time)
+
 # Only gets the relevant data
 table.data <- select(my.data, 3, 9, 10)
-colnames(table.data) <- c("Name of Games", "Total Game Time (in hours)", "Game Time in the Last 2 Week")
+colnames(table.data) <- c("Name of Game", "Total Game Time (in hours)", "Game Time in the Last 2 Week")
 
 my.ui <- fluidPage(
   
-  titlePanel("Steam api"),
-  
+  titlePanel("Statistics About Your Steam Profile"),
+
+  tags$div(
+
+    tags$br(),
+
+    tags$img(src = "https://blog.malwarebytes.com/wp-content/uploads/2015/04/steam-logo-new.png", width = "200px", height = "100px"),
+
+    tags$br()
+
+  ),
+
   # data
   sidebarLayout(
     
@@ -65,6 +81,8 @@ my.ui <- fluidPage(
     )
   
   ),
+  
+  textOutput("no.time"),
   
   textOutput("games.summary")
   
@@ -110,8 +128,12 @@ my.server <- function(input, output) {
     
   })
   
+  output$no.time <- renderPrint({
+    no.time.list
+  })
+  
   # stores user input steam id 
-  output$steamid <- renderText({
+  output$steamid <- renderPlot({
     
     message <- " "
     
