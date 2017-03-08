@@ -20,7 +20,7 @@ get.owned.games <- "IPlayerService/GetOwnedGames/v0001/"
 
 my.ui <- fluidPage(
   
-  tags$style("body {background-color: #c5d5c5}"),
+  tags$style("body {background-image: url(http://fashion.healthdailyheadlines.com/uploads/201411/27/go/gold%20rush%20minimal%20texture%20iphone%206%20plus%20wallpapers%20-%20minimal%20iphone%206%20plus%20wallpapers-f57318.jpg);}"),
   
   titlePanel("Statistics About Your Steam Profile"),
 
@@ -43,10 +43,10 @@ my.ui <- fluidPage(
   ),
   
   tags$br(),
-
-  # data
+  
   sidebarLayout(
     
+    # data
     sidebarPanel(
       
       textInput("id", "Input 64 Digit Steam ID", placeholder = "User ID here..."),
@@ -128,8 +128,8 @@ my.server <- function(input, output) {
     top.games <- head(table.data, input$num.games)
     
     ggplot(data = top.games) +
-      geom_bar(mapping = aes(x = top.games$`Name of Games`, y = top.games$`Total Game Time (in hours)`, 
-          fill = top.games$`Name of Games`), stat = "identity") +
+      geom_bar(mapping = aes(x = `Name of Game`, y = `Total Game Time (in hours)`, 
+          fill = `Name of Game`), stat = "identity") +
       ylab("Total Game Time (in hours)") +
       xlab("Game") +
       ggtitle("Top Games Played") +
