@@ -5,6 +5,7 @@ library("ggplot2")
 library("httr")
 library("jsonlite")
 library("knitr")
+library("tidyr")
 
 source("steam api key.R")
 
@@ -14,35 +15,12 @@ key <- paste0("?key=", api.key)
 # Get List of Games and arrange in order
 get.owned.games <- "IPlayerService/GetOwnedGames/v0001/"
 # steam.id <- "76561198064703938" # James
-steam.id <- "76561198043898894" # David
+# steam.id <- "76561198043898894" # David
 # steam.id <- "76561198042574722" # Jesse
-paste0
-
-results <- GET(paste0(base.url,get.owned.games,key,"&steamid=",steam.id,"&format=json&include_appinfo=1&include_played_free_games=1"))
-results <- content(results,"text")
-
-results <- fromJSON(results)
-# Converts the JSON into a data frame
-my.data <- data.frame(results, stringsAsFactors = FALSE)
-
-# arranges the data frame by forever playtime
-my.data <- arrange(my.data, -response.games.playtime_forever)
-
-# Converts the total play time from minutes to hours
-my.data <- mutate(my.data, "Total Time Played(in hours)" = round(response.games.playtime_forever / 60, digits = 1))
-my.data <- mutate(my.data, "Total Time Played Last 2 Weeks (in hours)" = round(response.games.playtime_2weeks / 60, digits = 1))
-
-# Games with no playtime
-no.time <- filter(my.data, response.games.playtime_forever == 0)
-no.time <- select(no.time, 3)
-colnames(no.time) <- c("Name of Game")
-no.time.list <- as.list(no.time)
-
-# Only gets the relevant data
-table.data <- select(my.data, 3, 9, 10)
-colnames(table.data) <- c("Name of Game", "Total Game Time (in hours)", "Game Time in the Last 2 Week")
 
 my.ui <- fluidPage(
+  
+  tags$style("body {background-color: #c5d5c5}"),
   
   titlePanel("Statistics About Your Steam Profile"),
 
@@ -50,11 +28,21 @@ my.ui <- fluidPage(
 
     tags$br(),
 
-    tags$img(src = "https://blog.malwarebytes.com/wp-content/uploads/2015/04/steam-logo-new.png", width = "200px", height = "100px"),
+    tags$img(src = "http://mediaserver.pulse2.com/uploads/2010/10/440px-Steam_logo.png", width = "440px", height = "126px"),
 
     tags$br()
 
   ),
+  
+  tags$br(), 
+  
+  textOutput("games.summary"),
+  
+  tags$body(
+    a("Link to lookup Steam ID", href="https://steamid.io/lookup")
+  ),
+  
+  tags$br(),
 
   # data
   sidebarLayout(
@@ -64,7 +52,7 @@ my.ui <- fluidPage(
       textInput("id", "Input 64 Digit Steam ID", placeholder = "User ID here..."),
       textOutput("steamid"),
       
-      sliderInput("num.games", "Number of Games to include: ",
+      sliderInput("num.games", "Number of Games to include: (for top games)",
                   min = 1, max = 20, value = 20)
   
     ),
@@ -74,17 +62,14 @@ my.ui <- fluidPage(
       
       tabsetPanel(type = "tabs",
         tabPanel("Graph", plotOutput("games.graph")),     
-        tabPanel("Table", tableOutput("top.table"))
+        tabPanel("Table (Top games played)", tableOutput("top.table")),
+        tabPanel("Table (Games with no playtime)", tableOutput("no.table"))
         
       )
       
     )
   
-  ),
-  
-  textOutput("no.time"),
-  
-  textOutput("games.summary")
+  )
   
 )
 
@@ -92,13 +77,56 @@ my.server <- function(input, output) {
   
   output$top.table <- renderTable({
     
+    results <- GET(paste0(base.url,get.owned.games,key,"&steamid=",input$id,"&format=json&include_appinfo=1&include_played_free_games=1"))
+    results <- content(results,"text")
+    
+    results <- fromJSON(results)
+    # Converts the JSON into a data frame
+    my.data <- data.frame(results, stringsAsFactors = FALSE)
+    
+    # arranges the data frame by forever playtime
+    my.data <- arrange(my.data, -response.games.playtime_forever)
+    
+    # Converts the total play time from minutes to hours
+    my.data <- mutate(my.data, "Total Time Played(in hours)" = round(response.games.playtime_forever / 60, digits = 1))
+    my.data <- mutate(my.data, "Total Time Played Last 2 Weeks (in hours)" = round(response.games.playtime_2weeks / 60, digits = 1))
+    
+    # Games with no playtime
+    no.time <- filter(my.data, response.games.playtime_forever == 0)
+    no.time <- select(no.time, 3)
+    colnames(no.time) <- c("Name of Game")
+    no.time.list <- as.list(no.time)
+    
+    # Only gets the relevant data
+    table.data <- select(my.data, 3, 9, 10)
+    colnames(table.data) <- c("Name of Game", "Total Game Time (in hours)", "Game Time in the Last 2 Week")
+    
     top.table.games <- head(table.data, input$num.games)
     
   })
   
   output$games.graph <- renderPlot({
     
+    results <- GET(paste0(base.url,get.owned.games,key,"&steamid=",input$id,"&format=json&include_appinfo=1&include_played_free_games=1"))
+    results <- content(results,"text")
+    
+    results <- fromJSON(results)
+    # Converts the JSON into a data frame
+    my.data <- data.frame(results, stringsAsFactors = FALSE)
+    
+    # arranges the data frame by forever playtime
+    my.data <- arrange(my.data, -response.games.playtime_forever)
+    
+    # Converts the total play time from minutes to hours
+    my.data <- mutate(my.data, "Total Time Played(in hours)" = round(response.games.playtime_forever / 60, digits = 1))
+    my.data <- mutate(my.data, "Total Time Played Last 2 Weeks (in hours)" = round(response.games.playtime_2weeks / 60, digits = 1))
+    
+    # Only gets the relevant data
+    table.data <- select(my.data, 3, 9, 10)
+    colnames(table.data) <- c("Name of Game", "Total Game Time (in hours)", "Game Time in the Last 2 Week")
+    
     top.games <- head(table.data, input$num.games)
+    
     ggplot(data = top.games) +
       geom_bar(mapping = aes(x = top.games$`Name of Games`, y = top.games$`Total Game Time (in hours)`, 
           fill = top.games$`Name of Games`), stat = "identity") +
@@ -120,28 +148,65 @@ my.server <- function(input, output) {
     # Sets input from slider into a var
     num <- input$num.games
     
-    message <- paste0("This table shows the top ", num, " played. The graph shows the top ", num, " played for your library 
-                      in lifetime hours. The table, shows the top ", num, " games played with the name of the game, lifetime 
-                      hours played, and amount of hours played in the last 2 weeks.")
+    message <- paste0("(THIS APPLICATION WILL NOT WORK WITHOUT A USER ID) \n This table shows the top ", num, " played. The graph shows 
+                      the top ", num, " played for your library in lifetime hours. The table, shows the top ", num, " games played 
+                      with the name of the game, lifetime hours played, and amount of hours played in the last 2 weeks.")
     
     return(message)
     
   })
   
-  output$no.time <- renderPrint({
-    no.time.list
+  output$no.table <- renderTable({
+    
+    results <- GET(paste0(base.url,get.owned.games,key,"&steamid=",input$id,"&format=json&include_appinfo=1&include_played_free_games=1"))
+    results <- content(results,"text")
+    
+    results <- fromJSON(results)
+    # Converts the JSON into a data frame
+    my.data <- data.frame(results, stringsAsFactors = FALSE)
+    
+    # arranges the data frame by forever playtime
+    my.data <- arrange(my.data, -response.games.playtime_forever)
+    
+    # Games with no playtime
+    no.time <- filter(my.data, response.games.playtime_forever == 0)
+    no.time <- select(no.time, 3)
+    colnames(no.time) <- c("Name of Game with Zero Playtime")
+    
+    no.time
+    
   })
-  
+
   # stores user input steam id 
-  output$steamid <- renderPlot({
+  output$steamid <- renderText({
     
-    message <- " "
+    get.friend.list<-"ISteamUser/GetFriendList/v0001/"
+    results<-GET(paste0(base.url,get.friend.list,key,"&steamid=",input$id))
+    results <- content(results, "text")
+    results <- fromJSON(results)
+    results<-data.frame(results, stringsAsFactors = FALSE)
+    results<-flatten(results)
+    is.data.frame(results)
     
-    if (!is.null(input$id)) {
-      message <- paste0("Your id is: ", input$id)
+    
+    test<-c(TRUE, FALSE, FALSE)
+    steam.id.from.friends <- results[test]
+    steam.id.from.friends<-gather(steam.id.from.friends)
+    collected <- steam.id.from.friends$value[1]
+    data.frame(steam.id.from.friends, stringsAsFactors = FALSE)
+    
+    
+    
+    all.except.one<-steam.id.from.friends$value
+    nrow(steam.id.from.friends)
+    all.except.one<- all.except.one[c(2:100)]
+    all.except.one<-all.except.one[complete.cases(all.except.one)]
+    for(id in all.except.one){
+      collected<-paste0(collected,",",id)
     }
-    
-    return(message)
+    message <- collected
+   
+    return("")
   })
   
 }
