@@ -44,6 +44,8 @@ my.ui <- fluidPage(
   
   tags$br(),
   
+  plotOutput("map"),
+  
   sidebarLayout(
     
     # data
@@ -74,6 +76,10 @@ my.ui <- fluidPage(
 )
 
 my.server <- function(input, output) {
+  
+  output$map <- renderPlot({
+    
+  })
   
   output$top.table <- renderTable({
     
